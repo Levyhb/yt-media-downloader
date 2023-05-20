@@ -1,3 +1,4 @@
 pytube
 django
 moviepy
+django-cors-headers
