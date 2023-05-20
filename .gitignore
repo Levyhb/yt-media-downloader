@@ -1,0 +1,22 @@
+# Django
+*.pyc
+*.pyo
+__pycache__/
+*.sqlite3
+
+# Dependências do Python
+venv/
+env/
+*.env
+myenv
+
+# Dependências do Node.js
+node_modules/
+
+# Dependências do React
+build/
+
+# Arquivos de mídia temporários
+temp/
+
+# Outros arquivos e pastas que você deseja ignorar
