@@ -1,0 +1,10 @@
+! Front-end:
+- Recriar a Aplicação utilizando Typescript e Next.Js
+- Criar um select com opção de Vídeo/Audio
+- Criar lógica para baixar vídeo ou Audio
+- Estilizar (utilizar Styled-components)
+
+
+! Back-end:
+- Aplicar POO
+- Criar uma nova função para baixar também audio
