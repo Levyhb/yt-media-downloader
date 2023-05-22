@@ -1,0 +1,15 @@
+{
+  "builds": [
+    {
+      "src": "video_downloader_api/asgi.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "15mb", "runtime": "python3.9" }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "video_downloader_api/wsgi.py"
+    }
+  ]
+}
