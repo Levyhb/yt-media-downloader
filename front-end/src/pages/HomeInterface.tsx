@@ -2,7 +2,8 @@ import { useState } from "react";
 import styles from "@/styles/Home.module.css";
 import OndemandVideoIcon from '@mui/icons-material/OndemandVideo';
 import AudiotrackIcon from '@mui/icons-material/Audiotrack';
-import DownloadIcon from '@mui/icons-material/Download';
+import { notifyError } from "@/utils/notifyMessage";
+notifyError
 
 function HomeInterface() {
   const [url, setUrl] = useState("");
@@ -26,9 +27,11 @@ function HomeInterface() {
           a.click();
         } else {
           console.log("Erro na solicitação");
+          notifyError('Invalid URL')
         }
       } catch (error) {
         console.log("Erro na solicitação", error);
+
       }
     } else {
       console.log("URL inválida");
