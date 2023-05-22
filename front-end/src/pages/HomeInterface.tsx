@@ -8,15 +8,16 @@ import TooltipInfo from "@/utils/TooltipInfo";
 
 function HomeInterface() {
   const [url, setUrl] = useState("");
+  const API = process.env.NEXT_PUBLIC_API_REF;
 
   const handleDownload = async (type: string) => {
     if (url) {
       try {
         const response =
           type === "video"
-            ? await fetch(`http://127.0.0.1:8000/api/download-video?url=${url}`)
+            ? await fetch(`${API}/api/download-video?url=${url}`)
             : await fetch(
-                `http://127.0.0.1:8000/api/download-audio?url=${url}`
+                `${API}/api/download-audio?url=${url}`
               );
         if (response.ok) {
           const blob = await response.blob();
