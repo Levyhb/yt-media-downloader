@@ -9,7 +9,10 @@
 
 .title {
   font-size: 3rem;
-  margin-bottom: 3rem;
+  margin-bottom: 8rem;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  color: white;
+  text-shadow: 2px 4px rgba(0, 0, 0, 0.651);
 }
 
 .input_url {
@@ -19,6 +22,8 @@
   width: 50%;
   margin: 1rem;
   border-radius: 5px;
+  border-style: none;
+  box-shadow: 0 0 4px black;
 }
 
 .div_buttons {
@@ -27,7 +32,7 @@
 }
 
 .button {
-  padding: 10px;
+  padding: 12px;
   font-size: 20px;
   cursor: pointer;
   border-radius: 5px;
@@ -35,10 +40,13 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  box-shadow: 0 0 6px white;
+  font-weight: 700;
 }
 
 .button:disabled {
   cursor: not-allowed;
+  background-color: gray;
 }
 
 .audio {
@@ -46,7 +54,34 @@
   color: white;
 }
 
+.audio:hover {
+  background-color: rgb(28, 119, 204);
+}
+
 .video {
-  background-color: red;
+  background-color: rgb(255, 0, 0);
   color: white;
+}
+
+.video:hover {
+  background-color: rgb(230, 0, 0);
+}
+
+@media only screen and (max-width: 600px) {
+  .input_url {
+    width: 70%;
+  }
+
+  .button {
+    padding: 8px;
+    font-size: 18px;
+  }
+
+  .title {
+    font-size: 30px;
+  }
+
+  .div_buttons {
+    
+  }
 }
