@@ -1,9 +1,10 @@
 import { useState } from "react";
 import styles from "@/styles/Home.module.css";
-import OndemandVideoIcon from '@mui/icons-material/OndemandVideo';
-import AudiotrackIcon from '@mui/icons-material/Audiotrack';
+import OndemandVideoIcon from "@mui/icons-material/OndemandVideo";
+import AudiotrackIcon from "@mui/icons-material/Audiotrack";
 import { notifyError } from "@/utils/notifyMessage";
-notifyError
+notifyError;
+import TooltipInfo from "@/utils/TooltipInfo";
 
 function HomeInterface() {
   const [url, setUrl] = useState("");
@@ -27,11 +28,10 @@ function HomeInterface() {
           a.click();
         } else {
           console.log("Erro na solicitação");
-          notifyError('Invalid URL')
+          notifyError("Invalid URL");
         }
       } catch (error) {
         console.log("Erro na solicitação", error);
-
       }
     } else {
       console.log("URL inválida");
@@ -40,11 +40,14 @@ function HomeInterface() {
 
   return (
     <main className={styles.container}>
-      <h1 className={styles.title}>YT Media Downloader</h1>
+      <div className={styles.title}>
+        <h1>YT Media Downloader</h1>
+        <TooltipInfo />
+      </div>
       <input
         className={styles.input_url}
         type="text"
-        placeholder="Video Url"
+        placeholder="Youtube video URL"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
       />
