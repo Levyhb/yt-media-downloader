@@ -1,4 +1,8 @@
 import { useState } from "react";
+import styles from "@/styles/Home.module.css";
+import OndemandVideoIcon from '@mui/icons-material/OndemandVideo';
+import AudiotrackIcon from '@mui/icons-material/Audiotrack';
+import DownloadIcon from '@mui/icons-material/Download';
 
 function HomeInterface() {
   const [url, setUrl] = useState("");
@@ -32,23 +36,34 @@ function HomeInterface() {
   };
 
   return (
-    <div className="video-downloader-container">
-      <div>
-        <input
-          type="text"
-          placeholder="Video Url"
-          onChange={(e) => setUrl(e.target.value)}
-        />
-      </div>
-      <div>
-        <button type="button" onClick={() => handleDownload("video")}>
-          Download Vídeo
+    <main className={styles.container}>
+      <h1 className={styles.title}>YT Media Downloader</h1>
+      <input
+        className={styles.input_url}
+        type="text"
+        placeholder="Video Url"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+      />
+      <div className={styles.div_buttons}>
+        <button
+          type="button"
+          onClick={() => handleDownload("video")}
+          className={`${styles.button} ${styles.video}`}
+          disabled={url.length === 0}
+        >
+          Download Video <OndemandVideoIcon />
         </button>
-        <button type="button" onClick={() => handleDownload("audio")}>
-          Download Audio
+        <button
+          type="button"
+          onClick={() => handleDownload("audio")}
+          className={`${styles.button} ${styles.audio}`}
+          disabled={url.length === 0}
+        >
+          Download Audio <AudiotrackIcon />
         </button>
       </div>
-    </div>
+    </main>
   );
 }
 

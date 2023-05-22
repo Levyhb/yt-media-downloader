@@ -1,0 +1,52 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 90vh;
+}
+
+.title {
+  font-size: 3rem;
+  margin-bottom: 3rem;
+}
+
+.input_url {
+  text-align: center;
+  padding: 7px;
+  font-size: 22px;
+  width: 50%;
+  margin: 1rem;
+  border-radius: 5px;
+}
+
+.div_buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.button {
+  padding: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  border-style: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+}
+
+.audio {
+  background-color: rgb(44, 148, 245);
+  color: white;
+}
+
+.video {
+  background-color: red;
+  color: white;
+}
