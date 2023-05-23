@@ -1,4 +1,4 @@
-Django==4.2.1
-django-cors-headers==4.0.0
-moviepy==1.0.3
-pytube==15.0.0
+pytube
+django
+moviepy
+django-cors-headers
