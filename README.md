@@ -51,3 +51,5 @@ cd yt-downloader-api/ && pip install -r requirements.txt
 ```
 cd video_downloader_api/ && python manage.py runserver
 ```
+
+- Para funcionar corretamente necessário seguir os passos contido em yt-downloader-api/video_downloader_api/video_downloader_api/settings py
