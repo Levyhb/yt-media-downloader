@@ -31,6 +31,14 @@ EXTERNAL_HOST = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
+# To run locally:
+
+# set DEBUG = True
+# set ALLOWED_HOSTS = []
+# set CORS_ORIGIN_WHITELIST = []
+
+
 DEBUG = False
 
 ALLOWED_HOSTS = [
