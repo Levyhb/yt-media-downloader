@@ -2,3 +2,4 @@ pytube
 django
 moviepy
 django-cors-headers
+python-dotenv
