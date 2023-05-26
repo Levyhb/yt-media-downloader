@@ -2,8 +2,8 @@ services:
   - type: web
     name: yt-downloader-api
     env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "cd video_downloader_api/ && python manage.py runserver"
+    buildCommand: "cd yt-downloader-api && pip install -r requirements.txt"
+    startCommand: "cd yt-downloader-api/video_downloader_api && python manage.py runserver"
     envVars:
       - key: SECRET_KEY
         generateValue: true
