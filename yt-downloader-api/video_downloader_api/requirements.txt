@@ -3,3 +3,4 @@ django
 moviepy
 django-cors-headers
 python-dotenv
+gunicorn
