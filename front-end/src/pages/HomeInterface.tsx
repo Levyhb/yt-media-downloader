@@ -13,11 +13,12 @@ function HomeInterface() {
   const handleDownload = async (type: string) => {
     if (url) {
       try {
+        const encodedUrl = encodeURIComponent(url);
         const response =
           type === "video"
-            ? await fetch(`${API}/api/download-video?url=${url}`)
+            ? await fetch(`${API}/api/download-video/?url=${encodedUrl}`)
             : await fetch(
-                `${API}/api/download-audio?url=${url}`
+                `${API}/api/download-audio/?url=${encodedUrl}&format=mp3`
               );
         if (response.ok) {
           const blob = await response.blob();
