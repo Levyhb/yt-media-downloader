@@ -16,6 +16,7 @@ MAX_VIDEO_DURATION_SECONDS = int(os.environ.get("MAX_VIDEO_DURATION_SECONDS", "3
 MAX_DOWNLOAD_SIZE_BYTES = int(os.environ.get("MAX_DOWNLOAD_SIZE_BYTES", str(512 * 1024 * 1024)))
 DOWNLOAD_CHUNK_SIZE = 64 * 1024
 YOUTUBE_HOSTS = {"youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be"}
+YTDLP_COOKIE_FILE = os.environ.get("YTDLP_COOKIE_FILE")
 
 
 class TemporaryDownload:
@@ -64,9 +65,17 @@ def _duration_filter(info, *, incomplete):
     return None
 
 
+def _youtube_options():
+    options = {"js_runtimes": {"node": {}}}
+    if YTDLP_COOKIE_FILE:
+        options["cookiefile"] = YTDLP_COOKIE_FILE
+    return options
+
+
 def _prepare_download(url, media_type, audio_format):
     directory = tempfile.mkdtemp(prefix="yt-media-")
     options = {
+        **_youtube_options(),
         "outtmpl": os.path.join(directory, "%(id)s.%(ext)s"),
         "noplaylist": True,
         "quiet": True,
@@ -76,7 +85,6 @@ def _prepare_download(url, media_type, audio_format):
         "fragment_retries": 2,
         "max_filesize": MAX_DOWNLOAD_SIZE_BYTES,
         "match_filter": _duration_filter,
-        "js_runtimes": {"node": {}},
     }
 
     if media_type == "video":
@@ -174,7 +182,13 @@ def video_info(request):
         return JsonResponse({"error": "Informe uma URL HTTPS válida do YouTube."}, status=400)
 
     try:
-        options = {"quiet": True, "no_warnings": True, "skip_download": True, "socket_timeout": 15}
+        options = {
+            **_youtube_options(),
+            "quiet": True,
+            "no_warnings": True,
+            "skip_download": True,
+            "socket_timeout": 15,
+        }
         with yt_dlp.YoutubeDL(options) as downloader:
             info = downloader.extract_info(url, download=False)
         qualities = sorted({
