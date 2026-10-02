@@ -37,6 +37,12 @@ yarn-error.log*
 **/bin/
 **/obj/
 web/publish-check/
+web/publish-audit/
+web/publish/
+
+# YouTube authentication cookies (never commit these files)
+**/youtube-cookies.txt
+**/cookies.txt
 
 # typescript
 *.tsbuildinfo
