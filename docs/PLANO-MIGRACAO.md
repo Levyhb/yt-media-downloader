@@ -4,12 +4,21 @@ Este documento define o roteiro para transformar o projeto atual em uma aplicaç
 
 O objetivo é manter o backend em Python, substituir o frontend React/Next.js por Blazor WebAssembly e deixar cada parte com responsabilidades e ciclo de deploy próprios.
 
+## Status atual
+
+- Fase 1: em andamento; `front-end/` foi preservado e `web/` foi criado.
+- Fase 2: concluída inicialmente; o projeto Blazor WebAssembly em .NET 10 compila sem erros.
+- Fase 3: em andamento; a tela principal foi reproduzida em Razor e CSS.
+- Fases 4 e 5: possuem uma primeira implementação funcional de Python, yt-dlp, FFmpeg, Docker e testes locais.
+- Fases 6 a 9: pendentes.
+
 ## 1. Arquitetura atual
 
 ```text
-front-end/                         # Next.js, React, TypeScript e CSS
-yt-downloader-api/                 # Django e pytube
-  video_downloader_api/
+front-end/                         # Next.js, React, TypeScript e CSS (legado)
+web/                                # Blazor WebAssembly (.NET 10)
+api/                                # Django, yt-dlp e FFmpeg
+  api/
 render.yaml                        # configuração antiga do Render
 ```
 

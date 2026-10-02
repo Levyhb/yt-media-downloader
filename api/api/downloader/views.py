@@ -80,8 +80,10 @@ def _prepare_download(url, media_type, audio_format):
     }
 
     if media_type == "video":
+        quality = audio_format
+        quality_filter = f"[height<={quality}]" if quality else "[height<=1080]"
         options.update({
-            "format": "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best[height<=1080]/best",
+            "format": f"bestvideo{quality_filter}[ext=mp4]+bestaudio[ext=m4a]/best{quality_filter}[ext=mp4]/best{quality_filter}/best",
             "merge_output_format": "mp4",
         })
     else:
@@ -119,6 +121,13 @@ def _download(request, media_type):
     audio_format = request.GET.get("format", "original")
     if media_type == "audio" and audio_format not in {"original", "mp3"}:
         return JsonResponse({"error": "Formato de áudio não suportado."}, status=400)
+    if media_type == "video":
+        try:
+            audio_format = int(request.GET.get("quality", "1080"))
+        except ValueError:
+            return JsonResponse({"error": "Qualidade de vídeo inválida."}, status=400)
+        if audio_format not in {144, 240, 360, 480, 720, 1080}:
+            return JsonResponse({"error": "Qualidade de vídeo não suportada."}, status=400)
 
     try:
         directory, path, title = _prepare_download(url, media_type, audio_format)
@@ -156,6 +165,34 @@ def download_video(request):
 @require_GET
 def download_audio(request):
     return _download(request, "audio")
+
+
+@require_GET
+def video_info(request):
+    url = request.GET.get("url", "")
+    if not _is_valid_youtube_url(url):
+        return JsonResponse({"error": "Informe uma URL HTTPS válida do YouTube."}, status=400)
+
+    try:
+        options = {"quiet": True, "no_warnings": True, "skip_download": True, "socket_timeout": 15}
+        with yt_dlp.YoutubeDL(options) as downloader:
+            info = downloader.extract_info(url, download=False)
+        qualities = sorted({
+            int(format_info["height"])
+            for format_info in info.get("formats", [])
+            if format_info.get("height") and format_info.get("vcodec") not in {None, "none"}
+            and int(format_info["height"]) in {144, 240, 360, 480, 720, 1080}
+        })
+        return JsonResponse({
+            "id": info.get("id"),
+            "title": info.get("title"),
+            "thumbnail": info.get("thumbnail"),
+            "duration": info.get("duration"),
+            "qualities": qualities or [360, 720, 1080],
+        })
+    except Exception as error:
+        logger.warning("Video info failed (%s).", type(error).__name__)
+        return JsonResponse({"error": "Não foi possível carregar os dados deste vídeo."}, status=502)
 
 
 @require_GET

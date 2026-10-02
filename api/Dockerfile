@@ -12,6 +12,9 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY video_downloader_api/ ./
+# O contexto do build é a pasta api/. O código Django está em api/api/.
+COPY api/ ./
+
+ENV PORT=8080
 
 CMD ["sh", "-c", "gunicorn video_downloader_api.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers 1 --threads 4 --timeout 900 --access-logfile - --error-logfile -"]

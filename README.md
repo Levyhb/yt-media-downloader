@@ -4,7 +4,7 @@ Aplicação web para download de áudio e vídeo a partir de uma URL do YouTube,
 
 ## Estado do projeto
 
-O código atualmente presente ainda é a implementação legada em React/Next.js e Django/pytube. A migração será executada por fases, mantendo frontend e backend como aplicações separadas.
+O diretório `front-end/` continua sendo a implementação legada em React/Next.js. O novo frontend Blazor já foi criado em `web/`, enquanto a API Python permanece separada em `api/`.
 
 O roteiro detalhado está em [docs/PLANO-MIGRACAO.md](docs/PLANO-MIGRACAO.md).
 
@@ -17,9 +17,9 @@ api/  -> Python, yt-dlp e FFmpeg, publicado como container no Cloud Run
 
 ## Stack atual (legada)
 
-**Front-end:** React, Typescript/Javascript, NextJs, CSS, HTML
+**Frontend legado:** React, TypeScript/JavaScript, Next.js, CSS e HTML
 
-**Back-end:** Python, Django, pytube
+**Backend atual:** Python, Django e yt-dlp
 
 ## Stack alvo
 
@@ -35,6 +35,19 @@ api/  -> Python, yt-dlp e FFmpeg, publicado como container no Cloud Run
 - [Documentação do Blazor](https://learn.microsoft.com/aspnet/core/blazor/)
 - [Documentação do yt-dlp](https://github.com/yt-dlp/yt-dlp)
 - [Documentação do Google Cloud Run](https://cloud.google.com/run/docs)
+
+## Frontend Blazor
+
+Para executar o novo frontend:
+
+```bash
+cd web
+dotnet run
+```
+
+Em desenvolvimento, ele usa `http://localhost:8080` como URL da API, definida em `web/wwwroot/appsettings.Development.json`.
+
+O frontend antigo em `front-end/` foi mantido para comparação visual durante a migração. A tela Blazor carrega a prévia pelo player oficial do YouTube, consulta as qualidades disponíveis e permite escolher a resolução antes do download. Para áudio, o formato atual é MP3.
 
 
 ## Rodando localmente
@@ -67,7 +80,7 @@ Enquanto a migração não for concluída, o frontend antigo pode ser executado 
 A API Django usa `yt-dlp` e FFmpeg. Para rodar localmente, instale Python 3.12 e FFmpeg, crie um ambiente virtual e instale as dependências:
 
 ```bash
-cd yt-downloader-api
+cd api
 python -m venv .venv
 # Ative o ambiente virtual antes de continuar.
 pip install -r requirements.txt
@@ -76,16 +89,16 @@ pip install -r requirements.txt
 Copie `video_downloader_api/.env.example` para `video_downloader_api/.env` e inicie a API:
 
 ```bash
-cd video_downloader_api
+cd api
 python manage.py runserver 0.0.0.0:8080
 ```
 
-O endpoint de saúde fica em `http://localhost:8080/health`. Os endpoints de download continuam em `/api/download-video/` e `/api/download-audio/`; o formato MP3 é solicitado com `format=mp3`.
+O endpoint de saúde fica em `http://localhost:8080/health`. A prévia usa `/api/video-info/?url=...`; os endpoints de download ficam em `/api/download-video/` e `/api/download-audio/`. Vídeo aceita `quality` (`144`, `240`, `360`, `480`, `720` ou `1080`) e áudio MP3 é solicitado com `format=mp3`.
 
 Para executar o container localmente:
 
 ```bash
-cd yt-downloader-api
+cd api
 docker build -t yt-media-downloader-api .
 docker run --rm -p 8080:8080 --env-file video_downloader_api/.env yt-media-downloader-api
 ```
