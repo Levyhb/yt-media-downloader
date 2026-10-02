@@ -37,6 +37,8 @@ yarn-error.log*
 **/bin/
 **/obj/
 web/publish-check/
+web/publish-audit/
+web/publish/
 
 # typescript
 *.tsbuildinfo
