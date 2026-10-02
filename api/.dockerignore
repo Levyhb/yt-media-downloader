@@ -1,0 +1,12 @@
+.git
+.venv
+venv
+env
+__pycache__
+*.py[cod]
+*.sqlite3
+.env
+.env.*
+video_downloader_api/.env
+video_downloader_api/staticfiles
+video_downloader_api/temp

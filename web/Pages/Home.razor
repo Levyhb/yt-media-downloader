@@ -1,0 +1,105 @@
+@page "/"
+@using Microsoft.AspNetCore.Components.Web
+@inject DownloadApiClient ApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>StreamDrop — YouTube Downloader</PageTitle>
+
+<main class="app-shell">
+    <div class="glow glow-one"></div><div class="glow glow-two"></div>
+    <section class="hero" aria-labelledby="page-title">
+        <div class="brand-mark"><span>▶</span></div>
+        <p class="eyebrow">STREAMDROP / MEDIA TOOL</p>
+        <h1 id="page-title">Seu vídeo.<br /><span>Do seu jeito.</span></h1>
+        <p class="subtitle">Cole um link do YouTube, escolha o formato e baixe em poucos segundos.</p>
+
+        <div class="url-row">
+            <div class="url-field">
+                <span class="link-icon" aria-hidden="true">↗</span>
+                <label class="visually-hidden" for="youtube-url">URL do vídeo do YouTube</label>
+                <input id="youtube-url" type="url" placeholder="Cole a URL do YouTube aqui..." @bind="url" @bind:event="oninput" @onblur="LoadVideoAsync" @onkeydown="HandleKeyDown" />
+                @if (!string.IsNullOrWhiteSpace(url)) { <button class="clear-button" type="button" aria-label="Limpar URL" @onclick="ClearUrl">×</button> }
+            </div>
+            <button class="format-toggle" type="button" @onclick="ToggleFormat"><span class="format-icon">@(downloadType == "audio" ? "♫" : "▶")</span><span>@(downloadType == "audio" ? "Áudio" : "Vídeo")</span><span class="chevron">⌄</span></button>
+        </div>
+        @if (showFormatMenu)
+        {
+            <div class="format-menu" role="menu">
+                <button type="button" @onclick='() => SelectFormat("video")'>▶ Vídeo <small>MP4</small></button>
+                <button type="button" @onclick='() => SelectFormat("audio")'>♫ Áudio <small>MP3</small></button>
+            </div>
+        }
+        @if (isLoading) { <p class="status-message" role="status"><span class="spinner"></span> Carregando prévia...</p> }
+        else if (!string.IsNullOrWhiteSpace(errorMessage)) { <p class="error-message" role="alert">@errorMessage</p> }
+
+        @if (videoInfo is not null)
+        {
+            @if (downloadType == "video")
+            {
+                <div class="quality-section"><span>Qualidade do vídeo</span><div class="quality-list" role="group" aria-label="Qualidade do vídeo">
+                    @foreach (var quality in videoInfo.Qualities.OrderByDescending(x => x))
+                    { <button type="button" class="quality-button @(selectedQuality == quality ? "selected" : "")" @onclick="() => selectedQuality = quality">@(quality)p</button> }
+                </div></div>
+            }
+            <div class="preview-card"><div class="preview-heading"><span>PRÉVIA</span><strong>@videoInfo.Title</strong></div><div class="video-frame @(isPreviewLoading ? "is-loading" : "")">
+                @if (isPreviewLoading) { <div class="preview-loading" role="status"><span class="spinner"></span> Carregando vídeo...</div> }
+                <iframe src="@PreviewUrl" title="Prévia do vídeo" @onload="HandlePreviewLoaded" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div></div>
+            <button type="button" class="download-action" disabled="@isPreparing" aria-busy="@isPreparing" @onclick="StartDownloadAsync">
+                @if (isPreparing) { <span class="spinner" aria-hidden="true"></span> }
+                else { <span class="download-icon">@(downloadType == "audio" ? "♫" : "↓")</span> }
+                @(isPreparing ? "Preparando download..." : $"Baixar {(downloadType == "audio" ? "áudio MP3" : $"vídeo {selectedQuality}p")}")
+                @if (!isPreparing) { <span class="action-arrow" aria-hidden="true">→</span> }
+            </button>
+        }
+        <p class="privacy-note">✦ Gratuito para uso pessoal · Nenhum arquivo é armazenado</p>
+    </section>
+</main>
+
+@code {
+    private string url = string.Empty;
+    private string downloadType = "video";
+    private VideoInfo? videoInfo;
+    private string? errorMessage;
+    private bool isLoading, isPreparing, isPreviewLoading, showFormatMenu;
+    private int selectedQuality = 720;
+    private CancellationTokenSource? loadCancellation;
+    private string PreviewUrl => $"https://www.youtube.com/embed/{videoInfo?.Id}?rel=0&modestbranding=1";
+
+    private async Task HandleKeyDown(KeyboardEventArgs args) { if (args.Key == "Enter") await LoadVideoAsync(); }
+    private async Task LoadVideoAsync()
+    {
+        errorMessage = null; videoInfo = null; isPreviewLoading = false;
+        if (!ApiClient.IsValidYouTubeUrl(url)) { if (!string.IsNullOrWhiteSpace(url)) errorMessage = "Informe uma URL HTTPS válida do YouTube."; return; }
+        loadCancellation?.Cancel(); loadCancellation = new CancellationTokenSource(); isLoading = true;
+        try { videoInfo = await ApiClient.GetVideoInfoAsync(url, loadCancellation.Token); isPreviewLoading = videoInfo is not null; selectedQuality = videoInfo?.Qualities.Contains(720) == true ? 720 : videoInfo?.Qualities.LastOrDefault() ?? 360; }
+        catch (Exception) { errorMessage = "Não foi possível carregar a prévia. Verifique o link e tente novamente."; }
+        finally { isLoading = false; }
+    }
+    private void HandlePreviewLoaded() => isPreviewLoading = false;
+    private void ToggleFormat() => showFormatMenu = !showFormatMenu;
+    private void SelectFormat(string type) { downloadType = type; showFormatMenu = false; }
+    private void ClearUrl() { url = string.Empty; videoInfo = null; errorMessage = null; isPreviewLoading = false; }
+    private async Task StartDownloadAsync()
+    {
+        if (videoInfo is null || isPreparing) return;
+
+        isPreparing = true;
+
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+            await Task.Delay(100);
+            Navigation.NavigateTo(ApiClient.BuildDownloadUrl(url, downloadType, selectedQuality), forceLoad: true);
+
+            // A resposta com Content-Disposition inicia o download sem recarregar a
+            // aplicação. Dê tempo ao navegador para disparar a requisição antes de
+            // habilitar o botão novamente.
+            await Task.Delay(500);
+        }
+        finally
+        {
+            isPreparing = false;
+        }
+    }
+}

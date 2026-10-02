@@ -33,6 +33,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# .NET / Blazor build artifacts
+**/bin/
+**/obj/
+web/publish-check/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
