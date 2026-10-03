@@ -214,12 +214,12 @@ h1:focus {
     transform: translateY(-2px) rotate(45deg);
 }
 
-.video-frame {
+main.app-shell .video-frame {
     position: relative;
     cursor: progress;
 }
 
-.video-frame:not(.is-loading) {
+main.app-shell .video-frame:not(.is-loading) {
     cursor: auto;
 }
 

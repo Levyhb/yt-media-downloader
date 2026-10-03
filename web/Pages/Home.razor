@@ -21,7 +21,7 @@
                 <input id="youtube-url" type="url" placeholder="Cole a URL do YouTube aqui..." value="@url" @oninput="HandleUrlInputAsync" @onblur="LoadVideoAsync" @onkeydown="HandleKeyDown" />
                 @if (!string.IsNullOrWhiteSpace(url)) { <button class="clear-button" type="button" aria-label="Limpar URL" @onclick="ClearUrl">×</button> }
             </div>
-            <button class="format-toggle" type="button" @onclick="ToggleFormat"><span class="format-icon">@(downloadType == "audio" ? "♫" : "▶")</span><span>@(downloadType == "audio" ? "Áudio" : "Vídeo")</span><span class="chevron">⌄</span></button>
+            <button class="format-toggle" type="button" @onclick="ToggleFormat"><span class="format-icon">@(downloadType == "audio" ? "♫" : "▶")</span><span>@(downloadType == "audio" ? "Áudio" : "Vídeo")</span><span class="chevron" aria-hidden="true"></span></button>
         </div>
         @if (showFormatMenu)
         {
@@ -116,7 +116,8 @@
             videoInfo = null;
             isLoading = false;
             isPreviewLoading = false;
-            if (showValidation && !string.IsNullOrWhiteSpace(url)) errorMessage = "Informe uma URL válida de um vídeo do YouTube.";
+            if (showValidation && !string.IsNullOrWhiteSpace(url))
+                errorMessage = "Informe uma URL válida de um vídeo do YouTube.";
             return;
         }
 
@@ -136,14 +137,18 @@
 
         try
         {
-            if (delayMilliseconds > 0) await Task.Delay(delayMilliseconds, cancellation.Token);
+            if (delayMilliseconds > 0)
+                await Task.Delay(delayMilliseconds, cancellation.Token);
+
             var result = await ApiClient.GetVideoInfoAsync(url, cancellation.Token);
             cancellation.Token.ThrowIfCancellationRequested();
             if (previewVideoId != videoId) return;
 
             videoInfo = result;
             loadedVideoId = videoId;
-            selectedQuality = videoInfo?.Qualities.Contains(720) == true ? 720 : videoInfo?.Qualities.LastOrDefault() ?? 360;
+            selectedQuality = videoInfo?.Qualities.Contains(720) == true
+                ? 720
+                : videoInfo?.Qualities.LastOrDefault() ?? 360;
         }
         catch (OperationCanceledException) { }
         catch (Exception)
@@ -153,7 +158,8 @@
         }
         finally
         {
-            if (ReferenceEquals(loadCancellation, cancellation)) isLoading = false;
+            if (ReferenceEquals(loadCancellation, cancellation))
+                isLoading = false;
         }
     }
 
@@ -171,7 +177,6 @@
         isLoading = false;
         isPreviewLoading = false;
     }
-
     private async Task StartDownloadAsync()
     {
         if (videoInfo is null || isPreparing) return;
