@@ -20,7 +20,7 @@
                 <input id="youtube-url" type="url" placeholder="Cole a URL do YouTube aqui..." @bind="url" @bind:event="oninput" @onblur="LoadVideoAsync" @onkeydown="HandleKeyDown" />
                 @if (!string.IsNullOrWhiteSpace(url)) { <button class="clear-button" type="button" aria-label="Limpar URL" @onclick="ClearUrl">×</button> }
             </div>
-            <button class="format-toggle" type="button" @onclick="ToggleFormat"><span class="format-icon">@(downloadType == "audio" ? "♫" : "▶")</span><span>@(downloadType == "audio" ? "Áudio" : "Vídeo")</span><span class="chevron">⌄</span></button>
+            <button class="format-toggle" type="button" @onclick="ToggleFormat"><span class="format-icon">@(downloadType == "audio" ? "♫" : "▶")</span><span>@(downloadType == "audio" ? "Áudio" : "Vídeo")</span><span class="chevron" aria-hidden="true"></span></button>
         </div>
         @if (showFormatMenu)
         {
@@ -63,23 +63,54 @@
     private string? errorMessage;
     private bool isLoading, isPreparing, isPreviewLoading, showFormatMenu;
     private int selectedQuality = 720;
+    private string? loadedUrl;
     private CancellationTokenSource? loadCancellation;
     private string PreviewUrl => $"https://www.youtube.com/embed/{videoInfo?.Id}?rel=0&modestbranding=1";
 
     private async Task HandleKeyDown(KeyboardEventArgs args) { if (args.Key == "Enter") await LoadVideoAsync(); }
     private async Task LoadVideoAsync()
     {
-        errorMessage = null; videoInfo = null; isPreviewLoading = false;
+        var normalizedUrl = url.Trim();
+        errorMessage = null;
         if (!ApiClient.IsValidYouTubeUrl(url)) { if (!string.IsNullOrWhiteSpace(url)) errorMessage = "Informe uma URL HTTPS válida do YouTube."; return; }
-        loadCancellation?.Cancel(); loadCancellation = new CancellationTokenSource(); isLoading = true;
-        try { videoInfo = await ApiClient.GetVideoInfoAsync(url, loadCancellation.Token); isPreviewLoading = videoInfo is not null; selectedQuality = videoInfo?.Qualities.Contains(720) == true ? 720 : videoInfo?.Qualities.LastOrDefault() ?? 360; }
+        if (videoInfo is not null && string.Equals(loadedUrl, normalizedUrl, StringComparison.Ordinal)) return;
+
+        videoInfo = null;
+        loadedUrl = null;
+        isPreviewLoading = false;
+        loadCancellation?.Cancel();
+        loadCancellation?.Dispose();
+        var currentRequest = new CancellationTokenSource();
+        loadCancellation = currentRequest;
+        isLoading = true;
+
+        try
+        {
+            videoInfo = await ApiClient.GetVideoInfoAsync(normalizedUrl, currentRequest.Token);
+            loadedUrl = videoInfo is null ? null : normalizedUrl;
+            isPreviewLoading = videoInfo is not null;
+            selectedQuality = videoInfo?.Qualities.Contains(720) == true ? 720 : videoInfo?.Qualities.LastOrDefault() ?? 360;
+        }
+        catch (OperationCanceledException) when (currentRequest.IsCancellationRequested) { }
         catch (Exception) { errorMessage = "Não foi possível carregar a prévia. Verifique o link e tente novamente."; }
-        finally { isLoading = false; }
+        finally
+        {
+            if (ReferenceEquals(loadCancellation, currentRequest)) isLoading = false;
+        }
     }
     private void HandlePreviewLoaded() => isPreviewLoading = false;
     private void ToggleFormat() => showFormatMenu = !showFormatMenu;
     private void SelectFormat(string type) { downloadType = type; showFormatMenu = false; }
-    private void ClearUrl() { url = string.Empty; videoInfo = null; errorMessage = null; isPreviewLoading = false; }
+    private void ClearUrl()
+    {
+        loadCancellation?.Cancel();
+        url = string.Empty;
+        loadedUrl = null;
+        videoInfo = null;
+        errorMessage = null;
+        isLoading = false;
+        isPreviewLoading = false;
+    }
     private async Task StartDownloadAsync()
     {
         if (videoInfo is null || isPreparing) return;
