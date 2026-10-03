@@ -1,6 +1,6 @@
-# yt-media-downloader
+# YTDrop
 
-Aplicação web para download de áudio e vídeo a partir de uma URL do YouTube, em processo de migração para Blazor WebAssembly no frontend e uma API Python containerizada no Google Cloud Run.
+O YTDrop é uma aplicação web para download de áudio e vídeo a partir de uma URL do YouTube, com frontend Blazor WebAssembly e uma API Python containerizada no Google Cloud Run.
 
 ## Estado do projeto
 
@@ -99,14 +99,14 @@ Para executar o container localmente:
 
 ```bash
 cd api
-docker build -t yt-media-downloader-api .
-docker run --rm -p 8080:8080 --env-file video_downloader_api/.env yt-media-downloader-api
+docker build -t ytdrop-api .
+docker run --rm -p 8080:8080 --env-file video_downloader_api/.env ytdrop-api
 ```
 
 Para executar os testes Django dentro da imagem:
 
 ```bash
-docker run --rm -e DEBUG=true yt-media-downloader-api python manage.py test downloader
+docker run --rm -e DEBUG=true ytdrop-api python manage.py test downloader
 ```
 
 No Cloud Run, configure `SECRET_KEY` pelo Secret Manager, `CORS_ALLOWED_ORIGINS` com a origem exata do frontend e `ALLOWED_HOSTS` com os hosts aceitos. Não publique o arquivo `.env` local.
