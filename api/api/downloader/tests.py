@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
+from downloader.views import _youtube_options
+
 
 class DownloadApiTests(TestCase):
 	def test_health_endpoint_returns_ok(self):
@@ -67,3 +69,38 @@ class DownloadApiTests(TestCase):
 
 		self.assertEqual(response.status_code, 502)
 		self.assertNotIn("private infrastructure detail", response.content.decode())
+
+	def test_youtube_options_uses_temporary_writable_cookie_copy(self):
+		with tempfile.TemporaryDirectory() as directory:
+			source = Path(directory) / "source-cookies.txt"
+			source.write_text("original-cookie-data", encoding="utf-8")
+
+			with patch("downloader.views.YTDLP_COOKIE_FILE", str(source)):
+				with _youtube_options() as options:
+					cookie_copy = Path(options["cookiefile"])
+					self.assertNotEqual(cookie_copy, source)
+					self.assertEqual(
+						cookie_copy.read_text(encoding="utf-8"),
+						"original-cookie-data",
+					)
+					cookie_copy.write_text("updated-by-yt-dlp", encoding="utf-8")
+
+				self.assertFalse(cookie_copy.exists())
+				self.assertEqual(
+					source.read_text(encoding="utf-8"),
+					"original-cookie-data",
+				)
+
+	def test_youtube_options_works_without_cookie_file(self):
+		with patch("downloader.views.YTDLP_COOKIE_FILE", None):
+			with _youtube_options() as options:
+				self.assertNotIn("cookiefile", options)
+				self.assertEqual(options["js_runtimes"], {"node": {}})
+				self.assertEqual(
+					options["extractor_args"]["youtube"]["player_client"],
+					["mweb"],
+				)
+				self.assertEqual(
+					options["extractor_args"]["youtubepot-bgutilhttp"]["base_url"],
+					["http://127.0.0.1:4416"],
+				)
