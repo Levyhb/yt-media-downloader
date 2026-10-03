@@ -3,6 +3,7 @@ import mimetypes
 import os
 import shutil
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -16,6 +17,7 @@ MAX_VIDEO_DURATION_SECONDS = int(os.environ.get("MAX_VIDEO_DURATION_SECONDS", "3
 MAX_DOWNLOAD_SIZE_BYTES = int(os.environ.get("MAX_DOWNLOAD_SIZE_BYTES", str(512 * 1024 * 1024)))
 DOWNLOAD_CHUNK_SIZE = 64 * 1024
 YOUTUBE_HOSTS = {"youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be"}
+YTDLP_COOKIE_FILE = os.environ.get("YTDLP_COOKIE_FILE")
 
 
 class TemporaryDownload:
@@ -64,40 +66,75 @@ def _duration_filter(info, *, incomplete):
     return None
 
 
-def _prepare_download(url, media_type, audio_format):
-    directory = tempfile.mkdtemp(prefix="yt-media-")
+@contextmanager
+def _youtube_options():
     options = {
-        "outtmpl": os.path.join(directory, "%(id)s.%(ext)s"),
-        "noplaylist": True,
-        "quiet": True,
-        "no_warnings": True,
-        "socket_timeout": 30,
-        "retries": 2,
-        "fragment_retries": 2,
-        "max_filesize": MAX_DOWNLOAD_SIZE_BYTES,
-        "match_filter": _duration_filter,
         "js_runtimes": {"node": {}},
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["mweb"],
+            },
+            "youtubepot-bgutilhttp": {
+                "base_url": ["http://127.0.0.1:4416"],
+            },
+        },
     }
-
-    if media_type == "video":
-        quality = audio_format
-        quality_filter = f"[height<={quality}]" if quality else "[height<=1080]"
-        options.update({
-            "format": f"bestvideo{quality_filter}[ext=mp4]+bestaudio[ext=m4a]/best{quality_filter}[ext=mp4]/best{quality_filter}/best",
-            "merge_output_format": "mp4",
-        })
-    else:
-        options["format"] = "bestaudio/best"
-        if audio_format == "mp3":
-            options["postprocessors"] = [{
-                "key": "FFmpegExtractAudio",
-                "preferredcodec": "mp3",
-                "preferredquality": "192",
-            }]
+    cookie_directory = None
 
     try:
-        with yt_dlp.YoutubeDL(options) as downloader:
-            info = downloader.extract_info(url, download=True)
+        if YTDLP_COOKIE_FILE:
+            source = Path(YTDLP_COOKIE_FILE)
+            if not source.is_file():
+                raise FileNotFoundError("The configured yt-dlp cookie file does not exist.")
+
+            cookie_directory = tempfile.mkdtemp(prefix="yt-cookies-")
+            cookie_copy = Path(cookie_directory) / "cookies.txt"
+            shutil.copyfile(source, cookie_copy)
+            cookie_copy.chmod(0o600)
+            options["cookiefile"] = str(cookie_copy)
+
+        yield options
+    finally:
+        if cookie_directory:
+            shutil.rmtree(cookie_directory, ignore_errors=True)
+
+
+def _prepare_download(url, media_type, audio_format):
+    directory = tempfile.mkdtemp(prefix="yt-media-")
+
+    try:
+        with _youtube_options() as youtube_options:
+            options = {
+                **youtube_options,
+                "outtmpl": os.path.join(directory, "%(id)s.%(ext)s"),
+                "noplaylist": True,
+                "quiet": True,
+                "no_warnings": True,
+                "socket_timeout": 30,
+                "retries": 2,
+                "fragment_retries": 2,
+                "max_filesize": MAX_DOWNLOAD_SIZE_BYTES,
+                "match_filter": _duration_filter,
+            }
+
+            if media_type == "video":
+                quality = audio_format
+                quality_filter = f"[height<={quality}]" if quality else "[height<=1080]"
+                options.update({
+                    "format": f"bestvideo{quality_filter}[ext=mp4]+bestaudio[ext=m4a]/best{quality_filter}[ext=mp4]/best{quality_filter}/best",
+                    "merge_output_format": "mp4",
+                })
+            else:
+                options["format"] = "bestaudio/best"
+                if audio_format == "mp3":
+                    options["postprocessors"] = [{
+                        "key": "FFmpegExtractAudio",
+                        "preferredcodec": "mp3",
+                        "preferredquality": "192",
+                    }]
+
+            with yt_dlp.YoutubeDL(options) as downloader:
+                info = downloader.extract_info(url, download=True)
 
         files = [
             path for path in Path(directory).iterdir()
@@ -174,9 +211,16 @@ def video_info(request):
         return JsonResponse({"error": "Informe uma URL HTTPS válida do YouTube."}, status=400)
 
     try:
-        options = {"quiet": True, "no_warnings": True, "skip_download": True, "socket_timeout": 15}
-        with yt_dlp.YoutubeDL(options) as downloader:
-            info = downloader.extract_info(url, download=False)
+        with _youtube_options() as youtube_options:
+            options = {
+                **youtube_options,
+                "quiet": True,
+                "no_warnings": True,
+                "skip_download": True,
+                "socket_timeout": 15,
+            }
+            with yt_dlp.YoutubeDL(options) as downloader:
+                info = downloader.extract_info(url, download=False)
         qualities = sorted({
             int(format_info["height"])
             for format_info in info.get("formats", [])

@@ -10,3 +10,7 @@ __pycache__
 video_downloader_api/.env
 video_downloader_api/staticfiles
 video_downloader_api/temp
+youtube-cookies.txt
+**/youtube-cookies.txt
+cookies.txt
+**/cookies.txt
