@@ -4,19 +4,38 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>StreamDrop — YouTube Downloader</title>
+    <title>YTDrop — YouTube Downloader</title>
     <base href="/" />
     <link rel="preload" id="webassembly" />
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
-    <link href="web.styles.css" rel="stylesheet" />
+    <link href="YTDrop.Web.styles.css" rel="stylesheet" />
     <script type="importmap"></script>
 </head>
 
 <body>
     <div id="app">
-        <p>Carregando StreamDrop...</p>
+        <div class="app-loader" role="status" aria-live="polite" aria-label="Carregando YTDrop">
+            <div class="app-loader__glow app-loader__glow--one"></div>
+            <div class="app-loader__glow app-loader__glow--two"></div>
+
+            <div class="app-loader__content">
+                <div class="app-loader__brand" aria-hidden="true">
+                    <span class="app-loader__play"></span>
+                    <span class="app-loader__orbit"></span>
+                </div>
+
+                <p class="app-loader__eyebrow">YTDROP / MEDIA TOOL</p>
+                <h1>Preparando tudo<span>.</span></h1>
+                <p class="app-loader__message">Seu download começa por aqui.</p>
+
+                <div class="app-loader__progress" aria-hidden="true">
+                    <span></span>
+                </div>
+                <p class="app-loader__percentage"></p>
+            </div>
+        </div>
     </div>
 
     <div id="blazor-error-ui">
@@ -24,6 +43,7 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
+    <script src="js/download.js"></script>
     <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
 </body>
 

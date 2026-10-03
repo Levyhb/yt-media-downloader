@@ -2,6 +2,167 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+body {
+    margin: 0;
+    background: #0b0c12;
+}
+
+.app-loader {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background:
+        linear-gradient(125deg, rgba(8, 9, 15, .98), rgba(19, 17, 31, .9)),
+        url('../yt-background.png') center / cover;
+    color: #f8f8fb;
+}
+
+.app-loader::after {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(#ffffff0d 1px, transparent 1px);
+    background-size: 24px 24px;
+    content: "";
+    mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 70%, transparent);
+}
+
+.app-loader__glow {
+    position: absolute;
+    width: min(42vw, 420px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    filter: blur(110px);
+    opacity: .25;
+    animation: loader-float 4s ease-in-out infinite alternate;
+}
+
+.app-loader__glow--one {
+    top: -12%;
+    left: 8%;
+    background: #f43f5e;
+}
+
+.app-loader__glow--two {
+    right: 7%;
+    bottom: -18%;
+    background: #7c3aed;
+    animation-delay: -2s;
+}
+
+.app-loader__content {
+    position: relative;
+    z-index: 1;
+    width: min(360px, calc(100% - 48px));
+    text-align: center;
+    animation: loader-appear .55s ease-out both;
+}
+
+.app-loader__brand {
+    position: relative;
+    display: grid;
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 24px;
+    place-items: center;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #fb3d5e, #ff7a45);
+    box-shadow: 0 15px 45px #fb3d5e66;
+}
+
+.app-loader__play {
+    width: 0;
+    height: 0;
+    margin-left: 4px;
+    border-top: 9px solid transparent;
+    border-bottom: 9px solid transparent;
+    border-left: 14px solid #fff;
+}
+
+.app-loader__orbit {
+    position: absolute;
+    inset: -8px;
+    border: 2px solid transparent;
+    border-top-color: #fb7185;
+    border-right-color: #ffffff66;
+    border-radius: 26px;
+    animation: loader-spin 1.2s linear infinite;
+}
+
+.app-loader__eyebrow {
+    margin: 0 0 14px;
+    color: #fb7185;
+    font: 700 10px/1 system-ui, sans-serif;
+    letter-spacing: 3px;
+}
+
+.app-loader h1 {
+    margin: 0;
+    font: 800 clamp(32px, 8vw, 44px)/1 system-ui, sans-serif;
+    letter-spacing: -2px;
+}
+
+.app-loader h1 span {
+    color: #fb7185;
+}
+
+.app-loader__message {
+    margin: 14px 0 28px;
+    color: #9294a5;
+    font: 14px/1.5 system-ui, sans-serif;
+}
+
+.app-loader__progress {
+    height: 4px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #ffffff14;
+}
+
+.app-loader__progress span {
+    display: block;
+    width: var(--blazor-load-percentage, 0%);
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #fb3d5e, #ff7a45);
+    box-shadow: 0 0 16px #fb3d5eaa;
+    transition: width .18s ease-out;
+}
+
+.app-loader__percentage {
+    min-height: 16px;
+    margin: 10px 0 0;
+    color: #686a7a;
+    font: 600 11px/1 system-ui, sans-serif;
+    letter-spacing: .08em;
+}
+
+.app-loader__percentage::after {
+    content: var(--blazor-load-percentage-text, "Carregando");
+}
+
+@keyframes loader-spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes loader-float {
+    to { transform: translate3d(20px, 25px, 0) scale(1.08); }
+}
+
+@keyframes loader-appear {
+    from { opacity: 0; transform: translateY(10px) scale(.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-loader__orbit,
+    .app-loader__glow,
+    .app-loader__content {
+        animation: none;
+    }
+}
+
 h1:focus {
     outline: none;
 }

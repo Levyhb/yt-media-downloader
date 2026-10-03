@@ -5,6 +5,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <AssemblyName>YTDrop.Web</AssemblyName>
+    <RootNamespace>YTDrop.Web</RootNamespace>
+    <Product>YTDrop</Product>
+    <Title>YTDrop</Title>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,6 +1,6 @@
-# Plano de migração e publicação
+# Plano de migração e publicação do YTDrop
 
-Este documento define o roteiro para transformar o projeto atual em uma aplicação com frontend em .NET/Blazor e backend Python publicado no Google Cloud Run.
+Este documento define o roteiro do YTDrop, uma aplicação com frontend em .NET/Blazor e backend Python publicado no Google Cloud Run.
 
 O objetivo é manter o backend em Python, substituir o frontend React/Next.js por Blazor WebAssembly e deixar cada parte com responsabilidades e ciclo de deploy próprios.
 
@@ -32,7 +32,7 @@ GET /api/download-audio/?url=<youtube-url>
 ## 2. Arquitetura-alvo
 
 ```text
-yt-media-downloader/
+YTDrop/
 ├── web/                            # Blazor WebAssembly (.NET 10)
 │   ├── Components/ ou Pages/
 │   ├── wwwroot/
@@ -216,8 +216,8 @@ Executar localmente o mesmo tipo de ambiente que será usado no Cloud Run.
 Comandos esperados, após a estrutura estar pronta:
 
 ```bash
-docker build -t yt-media-downloader-api ./api
-docker run --rm -p 8080:8080 -e PORT=8080 yt-media-downloader-api
+docker build -t ytdrop-api ./api
+docker run --rm -p 8080:8080 -e PORT=8080 ytdrop-api
 ```
 
 ### Critério de conclusão
