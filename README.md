@@ -1,128 +1,71 @@
 # YTDrop
 
-O YTDrop é uma aplicação web para download de áudio e vídeo a partir de uma URL do YouTube, com frontend Blazor WebAssembly e uma API Python containerizada no Google Cloud Run.
+Aplicação para baixar áudio em MP3 ou vídeo em MP4 a partir de uma URL válida do YouTube. O projeto tem uma API Python/Django em `api/` e um frontend Blazor WebAssembly em `web/`.
 
-## Estado do projeto
+Cada download tem limite máximo de **50.000.000 bytes (50 MB)**. Arquivos maiores são interrompidos ou rejeitados pela API.
 
-O diretório `front-end/` continua sendo a implementação legada em React/Next.js. O novo frontend Blazor já foi criado em `web/`, enquanto a API Python permanece separada em `api/`.
+## Requisitos
 
-O roteiro detalhado está em [docs/PLANO-MIGRACAO.md](docs/PLANO-MIGRACAO.md).
+- Python 3.12
+- Node.js e npm (para executar o script de desenvolvimento da API)
+- .NET 10 SDK
+- FFmpeg para conversão de áudio no modo de desenvolvimento local; a imagem Docker já o inclui
 
-## Arquitetura planejada
+## Executar a API localmente
 
-```text
-web/  -> Blazor WebAssembly (.NET 10), publicado como site estático
-api/  -> Python, yt-dlp e FFmpeg, publicado como container no Cloud Run
+No PowerShell, a partir da raiz do repositório:
+
+```powershell
+cd api
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+cd api
+Copy-Item .env.example .env
+$env:Path = (Resolve-Path ..\.venv\Scripts).Path + ";" + $env:Path
+npm run dev
 ```
 
-## Stack atual (legada)
+O script `dev`, definido em `api/api/package.json`, inicia o servidor Django em `http://localhost:8080`. O endpoint de saúde é `http://localhost:8080/health`. O ajuste de `PATH` vale apenas para esse terminal e permite ao script usar o Python do ambiente virtual sem precisar ativar scripts do PowerShell.
 
-**Frontend legado:** React, TypeScript/JavaScript, Next.js, CSS e HTML
+O arquivo `api/api/.env` é local e não deve ser enviado ao GitHub. A configuração de exemplo permite ajustar as origens CORS para o frontend local em `http://localhost:5004` e `https://localhost:7145`.
 
-**Backend atual:** Python, Django e yt-dlp
+### Executar a API com Docker
 
-## Stack alvo
+Essa opção inicia a API com a configuração do container, incluindo FFmpeg e o provedor de PO Token:
 
-**Frontend:** Blazor WebAssembly, .NET 10, Razor e CSS
+```powershell
+cd api
+docker build -t ytdrop-api .
+docker run --rm -p 8080:8080 --env-file api/.env ytdrop-api
+```
 
-**Backend:** Python, Django ou FastAPI, yt-dlp e FFmpeg
+## Executar o frontend localmente
 
-**Deploy:** Google Cloud Run para a API e um host de site estático para o frontend
+Em outro terminal, na raiz do repositório:
 
-## Documentação
-
-- [Plano detalhado de migração e publicação](docs/PLANO-MIGRACAO.md)
-- [Documentação do Blazor](https://learn.microsoft.com/aspnet/core/blazor/)
-- [Documentação do yt-dlp](https://github.com/yt-dlp/yt-dlp)
-- [Documentação do Google Cloud Run](https://cloud.google.com/run/docs)
-
-## Frontend Blazor
-
-Para executar o novo frontend:
-
-```bash
+```powershell
 cd web
 dotnet run
 ```
 
-Em desenvolvimento, ele usa `http://localhost:8080` como URL da API, definida em `web/wwwroot/appsettings.Development.json`.
+O perfil de desenvolvimento abre o frontend em `http://localhost:5004` (ou `https://localhost:7145`). A URL da API fica em `web/wwwroot/appsettings.Development.json`. Para usar a API local, defina `ApiBaseUrl` como `http://localhost:8080`; caso contrário, o frontend usará a URL atualmente configurada nesse arquivo.
 
-O frontend antigo em `front-end/` foi mantido para comparação visual durante a migração. A tela Blazor carrega a prévia pelo player oficial do YouTube, consulta as qualidades disponíveis e permite escolher a resolução antes do download. Para áudio, o formato atual é MP3.
+## Uso e endpoints
 
+Cole uma URL válida de vídeo do YouTube, escolha áudio ou vídeo e, para vídeo, selecione uma das qualidades oferecidas pela API. O download é iniciado pelo navegador; a API não mantém os arquivos depois de concluir a resposta.
 
-## Rodando localmente
+- `GET /api/video-info/?url=<url>` — consulta título e qualidades disponíveis.
+- `GET /api/download-video/?url=<url>&quality=<qualidade>` — baixa o vídeo em MP4.
+- `GET /api/download-audio/?url=<url>&format=mp3` — baixa o áudio em MP3.
 
-Clone o projeto
+O teto é aplicado tanto às faixas baixadas quanto ao arquivo final. A API aceita URLs HTTPS dos domínios oficiais do YouTube e valida a URL antes de iniciar o processamento.
 
-```bash
-  git clone git@github.com:Levyhb/yt-media-downloader.git
-```
+## Configuração de produção
 
-- Entre no diretório do projeto
+No Cloud Run, configure `SECRET_KEY` pelo Secret Manager, `ALLOWED_HOSTS` com o host exato da API e `CORS_ALLOWED_ORIGINS` com a origem do frontend, por exemplo `https://yt-media-downloader.vercel.app`. `MAX_DOWNLOAD_SIZE_BYTES` pode reduzir o limite, mas o código nunca permite ultrapassar 50.000.000 bytes. Não publique `.env` nem cookies do YouTube.
 
-```bash
-  cd yt-media-downloader
-```
+## Tecnologias
 
-
-### Frontend legado
-
-Enquanto a migração não for concluída, o frontend antigo pode ser executado com:
-
-```
-  cd front-end/ && npm install && npm run dev
-```
-
-- Para rodar localmente, você deve seguir os passos do arquivo .env.example
-
-### API Python
-
-A API Django usa `yt-dlp` e FFmpeg. Para rodar localmente, instale Python 3.12 e FFmpeg, crie um ambiente virtual e instale as dependências:
-
-```bash
-cd api
-python -m venv .venv
-# Ative o ambiente virtual antes de continuar.
-pip install -r requirements.txt
-```
-
-Copie `video_downloader_api/.env.example` para `video_downloader_api/.env` e inicie a API:
-
-```bash
-cd api
-python manage.py runserver 0.0.0.0:8080
-```
-
-O endpoint de saúde fica em `http://localhost:8080/health`. A prévia usa `/api/video-info/?url=...`; os endpoints de download ficam em `/api/download-video/` e `/api/download-audio/`. Vídeo aceita `quality` (`144`, `240`, `360`, `480`, `720` ou `1080`) e áudio MP3 é solicitado com `format=mp3`.
-
-Para executar o container localmente:
-
-```bash
-cd api
-docker build -t ytdrop-api .
-docker run --rm -p 8080:8080 --env-file video_downloader_api/.env ytdrop-api
-```
-
-Para executar os testes Django dentro da imagem:
-
-```bash
-docker run --rm -e DEBUG=true ytdrop-api python manage.py test downloader
-```
-
-No Cloud Run, configure `SECRET_KEY` pelo Secret Manager, `CORS_ALLOWED_ORIGINS` com a origem exata do frontend e `ALLOWED_HOSTS` com os hosts aceitos. Não publique o arquivo `.env` local.
-
-## Migração
-
-O novo ambiente de desenvolvimento será documentado e executado nesta ordem:
-
-1. substituir `front-end` por `web`;
-2. criar o Blazor WebAssembly em .NET 10;
-3. reproduzir a interface em Razor e CSS;
-4. modernizar a API Python com `yt-dlp`;
-5. adicionar Docker e testes locais;
-6. publicar a API no Cloud Run;
-7. configurar a URL da API por ambiente;
-8. publicar o Blazor como site estático;
-9. atualizar esta documentação com a arquitetura final e o procedimento de deploy.
-
-Consulte [docs/PLANO-MIGRACAO.md](docs/PLANO-MIGRACAO.md) antes de iniciar cada fase.
+- Frontend: Blazor WebAssembly, Razor, CSS e .NET 10
+- Backend: Python, Django, yt-dlp e FFmpeg
+- Hospedagem: frontend estático na Vercel e API containerizada no Google Cloud Run

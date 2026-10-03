@@ -31,7 +31,8 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get(
-        "ALLOWED_HOSTS", ".run.app,localhost,127.0.0.1,testserver"
+        "ALLOWED_HOSTS",
+        "yt-media-downloader-api-76415573303.southamerica-east1.run.app,localhost,127.0.0.1,testserver",
     ).split(",")
     if host.strip()
 ]

@@ -14,7 +14,11 @@ from django.views.decorators.http import require_GET
 
 logger = logging.getLogger(__name__)
 MAX_VIDEO_DURATION_SECONDS = int(os.environ.get("MAX_VIDEO_DURATION_SECONDS", "3600"))
-MAX_DOWNLOAD_SIZE_BYTES = int(os.environ.get("MAX_DOWNLOAD_SIZE_BYTES", str(512 * 1024 * 1024)))
+MAX_DOWNLOAD_SIZE_BYTES_LIMIT = 50_000_000
+MAX_DOWNLOAD_SIZE_BYTES = min(
+    int(os.environ.get("MAX_DOWNLOAD_SIZE_BYTES", str(MAX_DOWNLOAD_SIZE_BYTES_LIMIT))),
+    MAX_DOWNLOAD_SIZE_BYTES_LIMIT,
+)
 DOWNLOAD_CHUNK_SIZE = 64 * 1024
 YOUTUBE_HOSTS = {"youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be"}
 YTDLP_COOKIE_FILE = os.environ.get("YTDLP_COOKIE_FILE")
@@ -66,6 +70,22 @@ def _duration_filter(info, *, incomplete):
     return None
 
 
+def _download_size_limit_hook(downloaded_files):
+    def check_download_size(status):
+        if status.get("status") not in {"downloading", "finished"}:
+            return
+
+        filename = status.get("filename") or status.get("tmpfilename")
+        if not filename:
+            return
+
+        downloaded_files[filename] = int(status.get("downloaded_bytes") or 0)
+        if sum(downloaded_files.values()) > MAX_DOWNLOAD_SIZE_BYTES:
+            raise ValueError("Download exceeds the configured size limit.")
+
+    return check_download_size
+
+
 @contextmanager
 def _youtube_options():
     options = {
@@ -101,6 +121,7 @@ def _youtube_options():
 
 def _prepare_download(url, media_type, audio_format):
     directory = tempfile.mkdtemp(prefix="yt-media-")
+    downloaded_files = {}
 
     try:
         with _youtube_options() as youtube_options:
@@ -115,6 +136,7 @@ def _prepare_download(url, media_type, audio_format):
                 "fragment_retries": 2,
                 "max_filesize": MAX_DOWNLOAD_SIZE_BYTES,
                 "match_filter": _duration_filter,
+                "progress_hooks": [_download_size_limit_hook(downloaded_files)],
             }
 
             if media_type == "video":

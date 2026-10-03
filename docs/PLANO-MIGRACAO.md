@@ -19,7 +19,6 @@ front-end/                         # Next.js, React, TypeScript e CSS (legado)
 web/                                # Blazor WebAssembly (.NET 10)
 api/                                # Django, yt-dlp e FFmpeg
   api/
-render.yaml                        # configuração antiga do Render
 ```
 
 O backend atual possui dois endpoints:
